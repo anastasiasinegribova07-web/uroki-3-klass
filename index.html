@@ -15,7 +15,7 @@
 //    topic        тема
 //    summary      краткий конспект
 //    homework     домашнее задание
-//    konspekt     ссылка на конспект        (начинается с https://)
+//    konspekt     не используется: конспект даётся только текстом (summary)
 //    prezentaciya ссылка на презентацию     (начинается с https://)
 //    list         ссылка на рабочий лист    (начинается с https://)
 // =====================================================================
@@ -699,7 +699,7 @@ const TIMETABLE = {
 
     const mats = $("dMaterials");
     mats.textContent = "";
-    [["Конспект", l.konspekt], ["Презентация", l.prezentaciya], ["Рабочий лист", l.list]].forEach(function (p) {
+    [["Презентация", l.prezentaciya], ["Рабочий лист", l.list]].forEach(function (p) {
       const li = el("li");
       if (/^https?:\/\//i.test(p[1] || "")) {
         const a = el("a", "", p[0]);
