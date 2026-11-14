@@ -29,11 +29,11 @@ const SHEET_URL = "https://script.google.com/macros/s/AKfycbzdgZdHtXxf13V_ZeoRrF
 const LESSONS = [
   // ---------- Русский язык ----------
   { date: "23.11", subject: "Русский язык",
-    topic: "Слово и слог. Гласные звуки и буквы",
+    topic: "Звуки и буквы. Гласные звуки",
     summary: "", homework: "",
     konspekt: "", prezentaciya: "", list: "" },
   { date: "24.11", subject: "Русский язык",
-    topic: "Согласные звуки и буквы",
+    topic: "Звуки и буквы. Согласные звуки",
     summary: "", homework: "",
     konspekt: "", prezentaciya: "", list: "" },
   { date: "25.11", subject: "Русский язык",
@@ -41,7 +41,7 @@ const LESSONS = [
     summary: "", homework: "",
     konspekt: "", prezentaciya: "", list: "" },
   { date: "26.11", subject: "Русский язык",
-    topic: "Обучающее изложение повествовательного текста",
+    topic: "Обучающее изложение",
     summary: "", homework: "",
     konspekt: "", prezentaciya: "", list: "" },
   { date: "30.11", subject: "Русский язык",
@@ -49,85 +49,85 @@ const LESSONS = [
     summary: "", homework: "",
     konspekt: "", prezentaciya: "", list: "" },
   { date: "1.12", subject: "Русский язык",
-    topic: "Работа над ошибками. Проект «Рассказ о слове»",
+    topic: "Что такое корень слова?",
     summary: "", homework: "",
     konspekt: "", prezentaciya: "", list: "" },
   { date: "2.12", subject: "Русский язык",
-    topic: "Корень слова. Однокоренные слова",
+    topic: "Как найти в слове корень?",
     summary: "", homework: "",
     konspekt: "", prezentaciya: "", list: "" },
   { date: "3.12", subject: "Русский язык",
-    topic: "Корень слова. Словарный диктант №2",
+    topic: "Сложные слова",
     summary: "", homework: "",
     konspekt: "", prezentaciya: "", list: "" },
   { date: "7.12", subject: "Русский язык",
-    topic: "Чередование согласных в корне. Сложные слова",
+    topic: "Что такое окончание? Как найти в слове окончание?",
     summary: "", homework: "",
     konspekt: "", prezentaciya: "", list: "" },
   { date: "8.12", subject: "Русский язык",
-    topic: "Контрольное списывание №1",
+    topic: "Окончание слова",
     summary: "", homework: "",
     konspekt: "", prezentaciya: "", list: "" },
   { date: "9.12", subject: "Русский язык",
-    topic: "Формы слова. Окончание слова",
+    topic: "Что такое приставка? Как найти в слове приставку?",
     summary: "", homework: "",
     konspekt: "", prezentaciya: "", list: "" },
   { date: "10.12", subject: "Русский язык",
-    topic: "Обобщение знаний о корне и окончании",
+    topic: "Значения приставок",
     summary: "", homework: "",
     konspekt: "", prezentaciya: "", list: "" },
 
   // ---------- Математика ----------
   { date: "20.11", subject: "Математика",
-    topic: "Решение уравнений и составных задач с числом 6",
+    topic: "Таблица умножения и деления с числом 6",
     summary: "", homework: "",
     konspekt: "", prezentaciya: "", list: "" },
   { date: "23.11", subject: "Математика",
-    topic: "Таблица умножения и деления с числом 7",
+    topic: "Решение задач",
     summary: "", homework: "",
     konspekt: "", prezentaciya: "", list: "" },
   { date: "24.11", subject: "Математика",
-    topic: "Математический диктант №3. Взаимосвязь компонентов действий",
+    topic: "Решение задач",
     summary: "", homework: "",
     konspekt: "", prezentaciya: "", list: "" },
   { date: "26.11", subject: "Математика",
-    topic: "Понятие о площади фигуры. Сравнение площадей фигур на глаз и наложением",
+    topic: "Решение задач",
     summary: "", homework: "",
     konspekt: "", prezentaciya: "", list: "" },
   { date: "27.11", subject: "Математика",
-    topic: "Единица площади: квадратный сантиметр (см²)",
+    topic: "Таблица умножения и деления с числом 7",
     summary: "", homework: "",
     konspekt: "", prezentaciya: "", list: "" },
   { date: "30.11", subject: "Математика",
-    topic: "Площадь прямоугольника: правило вычисления (S = a · b)",
+    topic: "Что узнали. Чему научились",
     summary: "", homework: "",
     konspekt: "", prezentaciya: "", list: "" },
   { date: "1.12", subject: "Математика",
-    topic: "Единицы площади: квадратный дециметр (дм²) и квадратный метр (м²)",
+    topic: "Контрольная работа по теме «Табличное умножение и деление»",
     summary: "", homework: "",
     konspekt: "", prezentaciya: "", list: "" },
   { date: "3.12", subject: "Математика",
-    topic: "Решение практических задач на вычисление площади и периметра",
+    topic: "Площадь. Сравнение площадей фигур",
     summary: "", homework: "",
     konspekt: "", prezentaciya: "", list: "" },
   { date: "4.12", subject: "Математика",
-    topic: "Самостоятельная работа №3 «Площадь и периметр прямоугольника»",
+    topic: "Квадратный сантиметр",
     summary: "", homework: "",
     konspekt: "", prezentaciya: "", list: "" },
   { date: "7.12", subject: "Математика",
-    topic: "Таблица умножения и деления с числом 8",
+    topic: "Площадь прямоугольника",
     summary: "", homework: "",
     konspekt: "", prezentaciya: "", list: "" },
   { date: "8.12", subject: "Математика",
-    topic: "Таблица умножения и деления с числом 9",
+    topic: "Таблица умножения и деления с числом 8",
     summary: "", homework: "",
     konspekt: "", prezentaciya: "", list: "" },
   { date: "10.12", subject: "Математика",
-    topic: "Сводная таблица умножения (Таблица Пифагора)",
+    topic: "Закрепление изученного",
     summary: "", homework: "",
     konspekt: "", prezentaciya: "", list: "" },
   { date: "11.12", subject: "Математика",
-    topic: "Умножение на 1 и на 0. Деление нуля на число",
+    topic: "Решение задач",
     summary: "", homework: "",
     konspekt: "", prezentaciya: "", list: "" },
 
@@ -169,33 +169,33 @@ const LESSONS = [
     summary: "", homework: "",
     konspekt: "", prezentaciya: "", list: "" },
   { date: "11.12", subject: "Чтение",
-    topic: "Проверочная работа №2 «Великие русские писатели»",
+    topic: "Л.Н. Толстой. Рассказ «Лев и собачка»",
     summary: "", homework: "",
     konspekt: "", prezentaciya: "", list: "" },
 
   // ---------- Окружающий мир ----------
   { date: "23.11", subject: "Окружающий мир",
-    topic: "Охрана почв от разрушения и истощения",
-    summary: "", homework: "",
-    konspekt: "", prezentaciya: "", list: "" },
-  { date: "26.11", subject: "Окружающий мир",
     topic: "Разнообразие растений: мхи, папоротники, хвойные, цветковые",
     summary: "", homework: "",
     konspekt: "", prezentaciya: "", list: "" },
-  { date: "30.11", subject: "Окружающий мир",
-    topic: "Дыхание и питание растений. Фотосинтез на свету",
+  { date: "26.11", subject: "Окружающий мир",
+    topic: "Солнце, растения и мы с вами",
     summary: "", homework: "",
     konspekt: "", prezentaciya: "", list: "" },
-  { date: "3.12", subject: "Окружающий мир",
+  { date: "30.11", subject: "Окружающий мир",
     topic: "Размножение и развитие растений из семени",
     summary: "", homework: "",
     konspekt: "", prezentaciya: "", list: "" },
-  { date: "7.12", subject: "Окружающий мир",
+  { date: "3.12", subject: "Окружающий мир",
     topic: "Охрана растений. Растения Красной книги России",
     summary: "", homework: "",
     konspekt: "", prezentaciya: "", list: "" },
-  { date: "10.12", subject: "Окружающий мир",
+  { date: "7.12", subject: "Окружающий мир",
     topic: "Разнообразие животных: насекомые, рыбы, земноводные, птицы, звери",
+    summary: "", homework: "",
+    konspekt: "", prezentaciya: "", list: "" },
+  { date: "10.12", subject: "Окружающий мир",
+    topic: "Кто что ест? Цепи питания в природе",
     summary: "", homework: "",
     konspekt: "", prezentaciya: "", list: "" },
 ];
@@ -494,6 +494,26 @@ const TIMETABLE = {
   // ---------- Уроки и недели ----------
   const byId = {};
   LESSONS.forEach(function (l) { byId[lessonId(l)] = l; });
+
+  // ---------- Содержание уроков из листа «Уроки» Google-таблицы ----------
+  // Заполненная ячейка таблицы заменяет то, что записано в этом файле.
+  const BASE = LESSONS.map(function (l) { return Object.assign({}, l); });
+  const FIELDS = ["topic", "summary", "homework", "konspekt", "prezentaciya", "list"];
+  const LESSONS_KEY = "sayt-uroki-uroki";
+  function applyLessons(rows) {
+    if (!Array.isArray(rows)) return false;
+    const fromSheet = {};
+    rows.forEach(function (r) {
+      const p = /(\d{1,2})\.(\d{1,2})/.exec(String(r && r.date || ""));
+      if (p) fromSheet[Number(p[1]) + "." + Number(p[2]) + "|" + String(r.subject || "").trim()] = r;
+    });
+    LESSONS.forEach(function (l, i) {
+      const r = fromSheet[lessonId(l)] || {};
+      FIELDS.forEach(function (f) { l[f] = String(r[f] || "").trim() || BASE[i][f]; });
+    });
+    return true;
+  }
+  try { applyLessons(JSON.parse(localStorage.getItem(LESSONS_KEY))); } catch (e) {}
 
   const START = parseDate(PERIOD.from), END = parseDate(PERIOD.to);
   const weeks = [];
@@ -802,6 +822,9 @@ const TIMETABLE = {
       if (!res || !res.ok) throw new Error("bad answer");
       sent.forEach(function (c) { if (queue[c.id] && queue[c.id].t === c.t) delete queue[c.id]; });
       saveQueue();
+      if (applyLessons(res.lessons)) {
+        try { localStorage.setItem(LESSONS_KEY, JSON.stringify(res.lessons)); } catch (e) {}
+      }
       applyServer(res.marks);
       const now = new Date();
       $("syncLine").textContent = "Отметки общие, обновлено в " + now.getHours() + ":" + String(now.getMinutes()).padStart(2, "0");
