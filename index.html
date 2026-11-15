@@ -13,7 +13,8 @@
 //    date         дата урока (день.месяц)
 //    subject      предмет (точно как в расписании ниже)
 //    topic        тема
-//    summary      краткий конспект
+//    summary      краткий конспект. Картинка: отдельная строка
+//                 [картинка: imya-fajla.png], файл лежит в папке kartinki
 //    homework     домашнее задание
 //    konspekt     не используется: конспект даётся только текстом (summary)
 //    prezentaciya ссылка на презентацию     (начинается с https://)
@@ -356,6 +357,10 @@ const TIMETABLE = {
   }
   .d-text { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
   .d-text.empty { color: var(--muted); font-style: italic; }
+  .d-img {
+    display: block; max-width: 100%; height: auto; margin: 6px 0;
+    border: 1px solid rgba(0, 0, 0, 0.12); border-radius: 6px; background: #fff; cursor: zoom-in;
+  }
   .d-materials { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
   .d-materials li {
     display: flex; justify-content: space-between; gap: 12px;
@@ -682,9 +687,33 @@ const TIMETABLE = {
   let current = null;
   const $ = function (id) { return document.getElementById(id); };
 
+  // Картинка в конспекте: отдельная строка вида [картинка: imya-fajla.png].
+  // Сам файл лежит в папке kartinki рядом с index.html.
+  // Нажатие на картинку открывает её крупно.
+  const IMG_TAG = /\[картинка:\s*([A-Za-z0-9._-]+\.(?:png|jpe?g|gif|webp))\s*\]\n?/gi;
+  function makeImage(name) {
+    const img = document.createElement("img");
+    img.className = "d-img";
+    img.src = "kartinki/" + name;
+    img.alt = "Картинка к конспекту (нажмите, чтобы открыть крупно)";
+    img.addEventListener("click", function () { window.open(img.src, "_blank"); });
+    img.addEventListener("error", function () {
+      img.replaceWith(document.createTextNode("(картинка «" + name + "» не загрузилась)\n"));
+    });
+    return img;
+  }
   function setText(node, text) {
-    node.textContent = text || "Пока не заполнено";
+    node.textContent = "";
     node.classList.toggle("empty", !text);
+    if (!text) { node.textContent = "Пока не заполнено"; return; }
+    let last = 0, m;
+    IMG_TAG.lastIndex = 0;
+    while ((m = IMG_TAG.exec(text))) {
+      if (m.index > last) node.appendChild(document.createTextNode(text.slice(last, m.index)));
+      node.appendChild(makeImage(m[1]));
+      last = IMG_TAG.lastIndex;
+    }
+    if (last < text.length) node.appendChild(document.createTextNode(text.slice(last)));
   }
   function fillDialog() {
     const l = current, d = parseDate(l.date), m = markOf(l);
