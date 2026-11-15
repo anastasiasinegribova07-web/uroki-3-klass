@@ -142,35 +142,35 @@ const LESSONS = [
     summary: "", homework: "",
     konspekt: "", prezentaciya: "", list: "" },
   { date: "25.11", subject: "Чтение",
-    topic: "А.С. Пушкин «Сказка о царе Салтане…» (часть 5)",
+    topic: "И.А. Крылов. Басня «Мартышка и Очки»",
     summary: "", homework: "",
     konspekt: "", prezentaciya: "", list: "" },
   { date: "27.11", subject: "Чтение",
-    topic: "И.А. Крылов. Басни «Мартышка и Очки», «Зеркало и Обезьяна»",
+    topic: "И.А. Крылов. Басни «Ворона и Лисица», «Зеркало и Обезьяна»",
     summary: "", homework: "",
     konspekt: "", prezentaciya: "", list: "" },
   { date: "1.12", subject: "Чтение",
-    topic: "И.А. Крылов. Басня «Ворона и Лисица»",
-    summary: "", homework: "",
-    konspekt: "", prezentaciya: "", list: "" },
-  { date: "2.12", subject: "Чтение",
     topic: "М.Ю. Лермонтов «Горные вершины», «Утес»",
     summary: "", homework: "",
     konspekt: "", prezentaciya: "", list: "" },
-  { date: "4.12", subject: "Чтение",
+  { date: "2.12", subject: "Чтение",
     topic: "М.Ю. Лермонтов «Осень», «Парус»",
     summary: "", homework: "",
     konspekt: "", prezentaciya: "", list: "" },
-  { date: "8.12", subject: "Чтение",
+  { date: "4.12", subject: "Чтение",
     topic: "Л.Н. Толстой. Рассказ-быль «Акула»",
     summary: "", homework: "",
     konspekt: "", prezentaciya: "", list: "" },
-  { date: "9.12", subject: "Чтение",
+  { date: "8.12", subject: "Чтение",
     topic: "Л.Н. Толстой. Рассказ «Прыжок»",
     summary: "", homework: "",
     konspekt: "", prezentaciya: "", list: "" },
+  { date: "9.12", subject: "Чтение",
+    topic: "Л.Н. Толстой. Рассказ «Лев и собачка»; «Какая бывает роса на траве»; «Куда девается вода из моря?»",
+    summary: "", homework: "",
+    konspekt: "", prezentaciya: "", list: "" },
   { date: "11.12", subject: "Чтение",
-    topic: "Л.Н. Толстой. Рассказ «Лев и собачка»",
+    topic: "Проверочная работа «Великие русские писатели»",
     summary: "", homework: "",
     konspekt: "", prezentaciya: "", list: "" },
 
@@ -441,7 +441,7 @@ const TIMETABLE = {
     <h3>Краткий конспект</h3>
     <p class="d-text" id="dSummary"></p>
 
-    <h3>Материалы</h3>
+    <h3 id="dMaterialsTitle">Материалы</h3>
     <ul class="d-materials" id="dMaterials"></ul>
 
     <h3>Домашнее задание</h3>
@@ -746,7 +746,11 @@ const TIMETABLE = {
 
     const mats = $("dMaterials");
     mats.textContent = "";
+    // «не нужно» (или «нет», «-») в ячейке ссылки: строка не показывается.
+    // Если не нужны оба материала, прячется и заголовок «Материалы».
+    const NOT_NEEDED = /^(не\s*нужн[оаы]?|нет|[-–—])$/i;
     [["Презентация", l.prezentaciya], ["Рабочий лист", l.list]].forEach(function (p) {
+      if (NOT_NEEDED.test(String(p[1] || "").trim())) return;
       const li = el("li");
       if (/^https?:\/\//i.test(p[1] || "")) {
         const a = el("a", "", p[0]);
@@ -759,6 +763,7 @@ const TIMETABLE = {
       }
       mats.appendChild(li);
     });
+    mats.hidden = $("dMaterialsTitle").hidden = !mats.children.length;
 
     $("dSavedNote").hidden = !m.note;
     $("dSavedNoteText").textContent = m.note || "";
