@@ -715,8 +715,26 @@ const TIMETABLE = {
     }
     if (last < text.length) node.appendChild(document.createTextNode(text.slice(last)));
   }
+  // «Отпечаток» того, что показано в окне: содержание урока и отметка.
+  // По нему видно, изменилось ли что-то после ответа таблицы.
+  let shownLesson = "", shownMark = "";
+  function lessonPrint(l) { return JSON.stringify(FIELDS.map(function (f) { return l[f] || ""; })); }
+  function markPrint(l) { const m = markOf(l); return JSON.stringify([!!m.done, m.note || "", m.who || "", m.when || ""]); }
+  // Открытое окно обновляется само, когда из таблицы пришло новое.
+  // Если ничего не изменилось, окно не трогаем: картинки не мигают.
+  function refreshDialog() {
+    if (!dlg.open || !current) return;
+    const lessonChanged = lessonPrint(current) !== shownLesson;
+    if (!lessonChanged && markPrint(current) === shownMark) return;
+    const top = dlg.scrollTop;
+    fillDialog();
+    dlg.scrollTop = top;
+    if (lessonChanged) $("dMsg").textContent = "Урок обновлён: в таблице появились изменения.";
+  }
   function fillDialog() {
     const l = current, d = parseDate(l.date), m = markOf(l);
+    shownLesson = lessonPrint(l);
+    shownMark = markPrint(l);
     const slot = (TIMETABLE[d.getDay()] || []).indexOf(l.subject);
     dlg.className = "lesson " + (SUBJ_CLASS[l.subject] || "");
     $("dSubject").textContent = l.subject;
@@ -775,6 +793,7 @@ const TIMETABLE = {
     fillDialog();
     dlg.showModal();
     dlg.scrollTop = 0;
+    sync(); // сразу спросить таблицу, нет ли свежего текста урока
   }
   $("dClose").onclick = function () { dlg.close(); };
   dlg.addEventListener("click", function (e) { if (e.target === dlg) dlg.close(); });
@@ -831,7 +850,7 @@ const TIMETABLE = {
     });
     marks = next;
     saveMarks();
-    if (dlg.open && current) fillDialog();
+    refreshDialog();
     renderAll();
   }
 
