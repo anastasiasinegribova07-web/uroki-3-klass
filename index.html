@@ -246,7 +246,14 @@ const TIMETABLE = {
   .wrap { max-width: 640px; margin: 0 auto; padding: 0 16px 48px; }
 
   /* БЛОК 1: шапка */
-  header.top { padding: 24px 0 16px; border-bottom: 1px solid var(--line); }
+  header.top { padding: 16px 0 16px; border-bottom: 1px solid var(--line); }
+  .programs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 16px; }
+  .programs a {
+    padding: 9px 10px; border-radius: 10px; text-align: center; text-decoration: none;
+    border: 1px solid var(--line); background: var(--card); color: var(--ink);
+    font-size: 14px; font-weight: 600;
+  }
+  .programs a[aria-current="page"] { background: var(--ink); border-color: var(--ink); color: #fff; }
   header.top h1 {
     margin: 0;
     font: 600 26px/1.2 Georgia, "Times New Roman", serif;
@@ -394,6 +401,11 @@ const TIMETABLE = {
 
   <!-- БЛОК 1: шапка -->
   <header class="top">
+    <!-- Переключатель программ: 8.2 (основная) и 8.3 (свой лист «Уроки 8.3») -->
+    <nav class="programs" aria-label="Учебная программа">
+      <a href="#8.2" id="prog82">Программа 8.2</a>
+      <a href="#8.3" id="prog83">Программа 8.3</a>
+    </nav>
     <h1>3 класс. Уроки</h1>
     <p class="period">20 ноября – 12 декабря 2026</p>
     <div class="progress">
@@ -466,6 +478,19 @@ const TIMETABLE = {
 </dialog>
 
 <script>
+  // ---------- Какая программа открыта: 8.2 (основная) или 8.3 ----------
+  // Страница 8.3 открывается по адресу с #8.3 в конце. Расписание то же,
+  // содержание уроков из листа «Уроки 8.3», отметки свои (начинаются с «8.3|»).
+  const IS83 = location.hash === "#8.3";
+  const PREFIX = IS83 ? "8.3|" : "";
+  const SUFFIX = IS83 ? "-8.3" : "";
+  const LIST = IS83
+    ? LESSONS.map(function (l) { return { date: l.date, subject: l.subject, topic: "", summary: "", homework: "", konspekt: "", prezentaciya: "", list: "" }; })
+    : LESSONS;
+  document.getElementById(IS83 ? "prog83" : "prog82").setAttribute("aria-current", "page");
+  if (IS83) document.title = "3 класс. Программа 8.3";
+  window.addEventListener("hashchange", function () { location.reload(); });
+
   const SUBJ_CLASS = { "Русский язык": "rus", "Математика": "mat", "Чтение": "cht", "Окружающий мир": "okr" };
   const MONTHS = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"];
   const MONTHS_SHORT = ["янв", "фев", "мар", "апр", "мая", "июн", "июл", "авг", "сен", "окт", "ноя", "дек"];
@@ -483,11 +508,12 @@ const TIMETABLE = {
     return new Date(YEAR, p[1] - 1, p[0]);
   }
   function keyOf(d) { return d.getDate() + "." + (d.getMonth() + 1); }
-  function lessonId(l) { return keyOf(parseDate(l.date)) + "|" + l.subject; }
+  function dayId(l) { return keyOf(parseDate(l.date)) + "|" + l.subject; }
+  function lessonId(l) { return PREFIX + dayId(l); }
   function sameDay(a, b) { return a.getTime() === b.getTime(); }
 
   // ---------- Отметки и заметки (хранятся на этом устройстве) ----------
-  const STORE_KEY = "sayt-uroki-otmetki";
+  const STORE_KEY = "sayt-uroki-otmetki" + SUFFIX;
   let marks = {};
   try { marks = JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch (e) { marks = {}; }
   function saveMarks() {
@@ -498,13 +524,13 @@ const TIMETABLE = {
 
   // ---------- Уроки и недели ----------
   const byId = {};
-  LESSONS.forEach(function (l) { byId[lessonId(l)] = l; });
+  LIST.forEach(function (l) { byId[dayId(l)] = l; });
 
   // ---------- Содержание уроков из листа «Уроки» Google-таблицы ----------
   // Заполненная ячейка таблицы заменяет то, что записано в этом файле.
-  const BASE = LESSONS.map(function (l) { return Object.assign({}, l); });
+  const BASE = LIST.map(function (l) { return Object.assign({}, l); });
   const FIELDS = ["topic", "summary", "homework", "konspekt", "prezentaciya", "list"];
-  const LESSONS_KEY = "sayt-uroki-uroki";
+  const LESSONS_KEY = "sayt-uroki-uroki" + SUFFIX;
   function applyLessons(rows) {
     if (!Array.isArray(rows)) return false;
     const fromSheet = {};
@@ -512,8 +538,8 @@ const TIMETABLE = {
       const p = /(\d{1,2})\.(\d{1,2})/.exec(String(r && r.date || ""));
       if (p) fromSheet[Number(p[1]) + "." + Number(p[2]) + "|" + String(r.subject || "").trim()] = r;
     });
-    LESSONS.forEach(function (l, i) {
-      const r = fromSheet[lessonId(l)] || {};
+    LIST.forEach(function (l, i) {
+      const r = fromSheet[dayId(l)] || {};
       FIELDS.forEach(function (f) { l[f] = String(r[f] || "").trim() || BASE[i][f]; });
     });
     return true;
@@ -554,9 +580,9 @@ const TIMETABLE = {
 
   // ---------- БЛОК 1: счётчик ----------
   function renderProgress() {
-    const done = LESSONS.filter(function (l) { return markOf(l).done; }).length;
-    document.getElementById("progressCount").textContent = "Проведено " + done + " из " + LESSONS.length;
-    document.getElementById("progressBar").style.width = (LESSONS.length ? done / LESSONS.length * 100 : 0) + "%";
+    const done = LIST.filter(function (l) { return markOf(l).done; }).length;
+    document.getElementById("progressCount").textContent = "Проведено " + done + " из " + LIST.length;
+    document.getElementById("progressBar").style.width = (LIST.length ? done / LIST.length * 100 : 0) + "%";
   }
 
   // ---------- БЛОК 2: недели и дни ----------
@@ -650,7 +676,7 @@ const TIMETABLE = {
     list.textContent = "";
     if (!q && !searchSubject) { hint.textContent = "Введите слово из темы или выберите предмет."; return; }
 
-    const found = LESSONS.filter(function (l) {
+    const found = LIST.filter(function (l) {
       return (!searchSubject || l.subject === searchSubject) &&
              (!q || (l.topic || "").toLowerCase().indexOf(q) !== -1);
     }).sort(function (a, b) { return parseDate(a.date) - parseDate(b.date); });
@@ -824,7 +850,7 @@ const TIMETABLE = {
   // Изменение сначала сохраняется на устройстве и встаёт в очередь,
   // потом отправляется в таблицу. Нет связи: отправится позже.
   const SHARED = /^https:\/\//i.test(SHEET_URL);
-  const NAME_KEY = "sayt-uroki-imya", QUEUE_KEY = "sayt-uroki-ochered";
+  const NAME_KEY = "sayt-uroki-imya", QUEUE_KEY = "sayt-uroki-ochered" + SUFFIX;
   let queue = {};
   try { queue = JSON.parse(localStorage.getItem(QUEUE_KEY)) || {}; } catch (e) { queue = {}; }
   function saveQueue() { try { localStorage.setItem(QUEUE_KEY, JSON.stringify(queue)); } catch (e) {} }
@@ -846,6 +872,7 @@ const TIMETABLE = {
   function applyServer(data) {
     const next = {};
     Object.keys(data || {}).forEach(function (id) {
+      if ((id.indexOf("8.3|") === 0) !== IS83) return; // отметки другой программы
       const m = data[id];
       if (m && (m.done || m.note)) next[id] = { done: !!m.done, note: String(m.note || ""), who: String(m.who || ""), when: String(m.when || "") };
     });
@@ -875,8 +902,9 @@ const TIMETABLE = {
       if (!res || !res.ok) throw new Error("bad answer");
       sent.forEach(function (c) { if (queue[c.id] && queue[c.id].t === c.t) delete queue[c.id]; });
       saveQueue();
-      if (applyLessons(res.lessons)) {
-        try { localStorage.setItem(LESSONS_KEY, JSON.stringify(res.lessons)); } catch (e) {}
+      const rows = IS83 ? res.lessons83 : res.lessons;
+      if (applyLessons(rows)) {
+        try { localStorage.setItem(LESSONS_KEY, JSON.stringify(rows)); } catch (e) {}
       }
       applyServer(res.marks);
       const now = new Date();
