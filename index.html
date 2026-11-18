@@ -728,6 +728,21 @@ const TIMETABLE = {
     });
     return img;
   }
+  // Ссылка https://… в тексте конспекта или ДЗ становится нажимаемой (открывается в новой вкладке).
+  const URL_RE = /https:\/\/[^\s<>"«»]+[^\s<>"«».,;:!?)]/g;
+  function appendLinked(node, str) {
+    let last = 0, m;
+    URL_RE.lastIndex = 0;
+    while ((m = URL_RE.exec(str))) {
+      if (m.index > last) node.appendChild(document.createTextNode(str.slice(last, m.index)));
+      const a = document.createElement("a");
+      a.href = m[0]; a.target = "_blank"; a.rel = "noopener";
+      a.textContent = /igry-8-3\.html/.test(m[0]) ? "▶ открыть игру" : m[0];
+      node.appendChild(a);
+      last = URL_RE.lastIndex;
+    }
+    if (last < str.length) node.appendChild(document.createTextNode(str.slice(last)));
+  }
   function setText(node, text) {
     node.textContent = "";
     node.classList.toggle("empty", !text);
@@ -735,11 +750,11 @@ const TIMETABLE = {
     let last = 0, m;
     IMG_TAG.lastIndex = 0;
     while ((m = IMG_TAG.exec(text))) {
-      if (m.index > last) node.appendChild(document.createTextNode(text.slice(last, m.index)));
+      if (m.index > last) appendLinked(node, text.slice(last, m.index));
       node.appendChild(makeImage(m[1]));
       last = IMG_TAG.lastIndex;
     }
-    if (last < text.length) node.appendChild(document.createTextNode(text.slice(last)));
+    if (last < text.length) appendLinked(node, text.slice(last));
   }
   // «Отпечаток» того, что показано в окне: содержание урока и отметка.
   // По нему видно, изменилось ли что-то после ответа таблицы.
