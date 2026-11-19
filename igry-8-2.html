@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Игры 8.2</title>
+<style>
+  :root {
+    --bg: #f7f3ec; --card: #fffdf9; --ink: #2f2a25; --muted: #6f665c; --line: #e4dcd0;
+    --rus: #a4573f; --mat: #46668a; --ok: #3f7d3a; --ok-soft: #e3f0df; --no: #b5652e; --no-soft: #f8e9dc;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: Arial, "Helvetica Neue", sans-serif; }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 16px; }
+  header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  header h1 { font-size: 20px; margin: 0; flex: 1; }
+  .back { border: 1px solid var(--line); background: var(--card); border-radius: 10px; padding: 8px 12px; font-size: 15px; color: var(--ink); cursor: pointer; text-decoration: none; white-space: nowrap; }
+  .menu h2 { font-size: 15px; color: var(--muted); margin: 18px 0 8px; text-transform: uppercase; letter-spacing: .5px; }
+  .menu a { display: block; background: var(--card); border: 1px solid var(--line); border-left: 6px solid var(--rus); border-radius: 12px; padding: 14px 16px; margin-bottom: 8px; color: var(--ink); text-decoration: none; font-size: 18px; }
+  .menu a.m { border-left-color: var(--mat); }
+  .menu a small { display: block; color: var(--muted); font-size: 14px; margin-top: 2px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 20px 16px; text-align: center; }
+  .progress { display: flex; justify-content: center; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+  .progress i { width: 16px; height: 16px; border-radius: 50%; background: var(--line); display: inline-block; }
+  .progress i.done { background: var(--ok); }
+  .task { font-size: 18px; color: var(--muted); margin-bottom: 10px; }
+  .big { font-size: 44px; font-weight: bold; letter-spacing: 2px; margin: 10px 0 18px; min-height: 56px; overflow-wrap: anywhere; }
+  .big.text { font-size: 22px; font-weight: normal; letter-spacing: 0; line-height: 1.4; text-align: left; }
+  .big .gap { color: var(--rus); border-bottom: 3px solid var(--rus); padding: 0 6px; }
+  .btns { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+  .btns button { min-width: 110px; min-height: 64px; font-size: 24px; border-radius: 14px; border: 2px solid var(--line); background: #fff; color: var(--ink); cursor: pointer; padding: 8px 18px; }
+  .btns.words button { font-size: 21px; }
+  .btns button:disabled { opacity: .45; cursor: default; }
+  .msg { min-height: 64px; margin-top: 16px; font-size: 19px; border-radius: 12px; padding: 10px; }
+  .msg.ok { background: var(--ok-soft); color: var(--ok); }
+  .msg.no { background: var(--no-soft); color: var(--no); }
+  .next { margin-top: 12px; font-size: 20px; padding: 12px 26px; border-radius: 12px; border: 0; background: var(--ok); color: #fff; cursor: pointer; }
+  .final { font-size: 26px; margin: 10px 0; }
+  svg.pic { width: 100%; max-width: 300px; height: auto; display: block; margin: 0 auto 6px; }
+  @media (max-width: 420px) { .big { font-size: 34px; } .big.text { font-size: 19px; } .btns button { min-width: 90px; font-size: 20px; } }
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<script>
+// ================= ИГРЫ ДЛЯ ПРОГРАММЫ 8.2 =================
+// Каждая игра открывается по ссылке с #, например igry-8-2.html#koren.
+// 10 вопросов в игре. Без звуков и таймеров. Ошибка не наказывается: подсказка и ещё попытка.
+
+function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function rnd(a, b) { return a + Math.floor(Math.random() * (b - a + 1)); }
+function pick(arr, n) { return shuffle(arr).slice(0, n); }
+function gap(s) { return s.replace("_", '<span class="gap">?</span>'); }
+// три варианта ответа: верный и два близких
+function numOptions(right, step, unit) {
+  step = step || 1;
+  const s = new Set([right]);
+  shuffle([right + step, right - step, right + 1, right - 1, right + 2 * step]).forEach(function (x) { if (s.size < 3 && x >= 0) s.add(x); });
+  while (s.size < 3) s.add(right + s.size * 3);
+  return shuffle(Array.from(s)).map(function (x) { return x + (unit || ""); });
+}
+
+// ---------- Русский язык: данные ----------
+const UDAR = [["ма-ли-на",1],["со-ро-ка",1],["мо-ло-ко",2],["ка-ран-даш",2],["до-ро-га",1],["бе-рё-за",1],["ве-тер",0],["за-яц",0],["ры-ба",0],["во-да",1],["ко-ро-ва",1],["ба-ра-бан",2],["ли-си-ца",2],["пе-тух",1],["гри-бы",1],["о-сень",0],["сне-жин-ка",1],["кар-ти-на",1],["ту-ча",0],["ла-до-шка",1]];
+const MZ = [["ноч_ка","—","ночка"],["туч_ка","—","тучка"],["реч_ка","—","речка"],["молоч_ный","—","молочный"],["сказоч_ный","—","сказочный"],["помощ_ник","—","помощник"],["мощ_ный","—","мощный"],["птен_чик","—","птенчик"],["кон_","ь","конь"],["ден_","ь","день"],["пал_то","ь","пальто"],["пис_мо","ь","письмо"],["кол_цо","ь","кольцо"],["учител_","ь","учитель"],["пен_","ь","пень"],["сол_","ь","соль"]];
+const PARN = [["ду_","б","п","дубы"],["гри_","б","п","грибы"],["хле_","б","п","хлеба"],["зу_","б","п","зубы"],["сне_","г","к","снега"],["дру_","г","к","друзья"],["сапо_","г","к","сапоги"],["кру_","г","к","круги"],["утю_","г","к","утюги"],["гла_","з","с","глаза"],["моро_","з","с","морозы"],["но_","с","з","носы"],["е_","ж","ш","ежи"],["но_","ж","ш","ножи"],["ёр_","ш","ж","ерши"],["са_","д","т","сады"],["мё_","д","т","медовый"],["шка_","ф","в","шкафы"],["рука_","в","ф","рукава"]];
+const RAZD = [["сем_я","ь","семья"],["вороб_и","ь","воробьи"],["лист_я","ь","листья"],["плат_е","ь","платье"],["дерев_я","ь","деревья"],["руч_и","ь","ручьи"],["бел_ё","ь","бельё"],["крыл_я","ь","крылья"],["в_юга","ь","вьюга"],["солов_и","ь","соловьи"],["пол_яна","—","поляна"],["л_юди","—","люди"],["кл_ён","—","клён"],["мор_як","—","моряк"],["н_юхать","—","нюхать"],["т_ёплый","—","тёплый"]];
+const KOREN = [
+  [["вода","водяной","подводный"],"водить","водить — это про «водить машину», а не про воду"],
+  [["гора","горный","пригорок"],"горе","горе — это беда, а не гора"],
+  [["лес","лесной","лесник"],"лестница","лестница — не про лес"],
+  [["море","морской","моряк"],"морковь","морковь — овощ, не про море"],
+  [["лиса","лисёнок","лисий"],"лист","лист растёт на дереве, это не про лису"],
+  [["сад","садовник","садовый"],"садиться","садиться — значит сесть, а не сад"],
+  [["рыба","рыбак","рыбный"],"рынок","рынок — место, где торгуют"],
+  [["кот","котёнок","котик"],"котлета","котлета — еда, не про кота"],
+  [["дом","домик","домашний"],"дым","дым — от костра, корень другой"],
+  [["зима","зимний","зимовать"],"змея","змея — животное, не про зиму"],
+  [["нос","носик","носатый"],"носить","носить — значит нести, а не нос"],
+  [["соль","солонка","солёный"],"солнце","солнце светит, это не про соль"],
+  [["гриб","грибник","грибной"],"грива","грива у лошади, не про гриб"],
+];
+const SLOZH = [["пар_ход","о","пароход"],["сам_лёт","о","самолёт"],["вод_пад","о","водопад"],["снег_пад","о","снегопад"],["лист_пад","о","листопад"],["звезд_пад","о","звездопад"],["лед_кол","о","ледокол"],["тепл_ход","о","теплоход"],["сам_вар","о","самовар"],["пеш_ход","е","пешеход"],["пыл_сос","е","пылесос"],["птиц_лов","е","птицелов"],["каш_вар","е","кашевар"],["везд_ход","е","вездеход"],["земл_ройка","е","землеройка"]];
+// слово, окончание, два неверных варианта, подсказка (формы слова)
+const OKONCH = [
+  ["рекой","ой","кой","й","река — реки — рекой"],["лесу","у","су","нулевое","лес — леса — лесу"],
+  ["дом","нулевое","м","ом","дом — дома — дому"],["берёзами","ами","ми","зами","берёза — берёзы — берёзами"],
+  ["окна","а","на","кна","окно — окна — окном"],["столы","ы","лы","нулевое","стол — столы — столом"],
+  ["зимой","ой","мой","й","зима — зимы — зимой"],["снег","нулевое","г","ег","снег — снега — снегу"],
+  ["кошки","и","ки","шки","кошка — кошки — кошкой"],["травы","ы","вы","авы","трава — травы — траву"],
+  ["конь","нулевое","ь","онь","конь — коня — коню"],["полями","ями","ми","лями","поле — поля — полями"],
+  ["деревом","ом","вом","м","дерево — дерева — деревом"],["маме","е","ме","аме","мама — маме — мамой"],
+];
+// слово, приставка, слово без приставки, два неверных варианта
+const PRIST = [
+  ["приехал","при","ехал","пр","прие"],["выбежал","вы","бежал","в","выб"],["переход","пере","ход","пер","перех"],
+  ["заплыл","за","плыл","з","зап"],["отлетел","от","летел","о","отл"],["дорисовал","до","рисовал","д","дор"],
+  ["уехал","у","ехал","уе","уех"],["поход","по","ход","п","пох"],["надписал","над","писал","на","надп"],
+  ["подбежал","под","бежал","по","подб"],["прилетел","при","летел","пр","прил"],["убежал","у","бежал","уб","убе"],
+  ["вылетел","вы","летел","в","выл"],["отнёс","от","нёс","о","отн"],["записал","за","писал","з","зап"],
+];
+
+// ---------- Математика: рисунки ----------
+function figureSvg(cells) {
+  const s = 34, cols = 7, rows = 5, W = cols * s + 2, H = rows * s + 2;
+  let g = "";
+  for (let x = 0; x <= cols; x++) g += '<line x1="' + (1 + x * s) + '" y1="1" x2="' + (1 + x * s) + '" y2="' + (H - 1) + '" stroke="#d8d0c4" stroke-width="1"/>';
+  for (let y = 0; y <= rows; y++) g += '<line x1="1" y1="' + (1 + y * s) + '" x2="' + (W - 1) + '" y2="' + (1 + y * s) + '" stroke="#d8d0c4" stroke-width="1"/>';
+  cells.forEach(function (c) { g += '<rect x="' + (1 + c[0] * s) + '" y="' + (1 + c[1] * s) + '" width="' + s + '" height="' + s + '" fill="#cfe0f2" stroke="#46668a" stroke-width="2"/>'; });
+  return '<svg class="pic" viewBox="0 0 ' + W + ' ' + H + '">' + g + '</svg>';
+}
+function randomFigure(n) {
+  const cells = [[rnd(2, 4), rnd(1, 3)]];
+  const has = function (x, y) { return cells.some(function (c) { return c[0] === x && c[1] === y; }); };
+  let guard = 0;
+  while (cells.length < n && guard++ < 500) {
+    const c = cells[rnd(0, cells.length - 1)], d = [[1,0],[-1,0],[0,1],[0,-1]][rnd(0, 3)];
+    const x = c[0] + d[0], y = c[1] + d[1];
+    if (x >= 0 && x < 7 && y >= 0 && y < 5 && !has(x, y)) cells.push([x, y]);
+  }
+  return cells;
+}
+function rectSvg(a, b) {
+  const cell = Math.min(230 / a, 130 / b), w = a * cell, h = b * cell, x0 = 56 + (234 - w) / 2, y0 = 18;
+  let g = '<rect x="' + x0 + '" y="' + y0 + '" width="' + w + '" height="' + h + '" fill="#cfe0f2" stroke="#46668a" stroke-width="3"/>';
+  for (let i = 1; i < a; i++) g += '<line x1="' + (x0 + i * cell) + '" y1="' + y0 + '" x2="' + (x0 + i * cell) + '" y2="' + (y0 + h) + '" stroke="#9db6d3" stroke-width="1"/>';
+  for (let j = 1; j < b; j++) g += '<line x1="' + x0 + '" y1="' + (y0 + j * cell) + '" x2="' + (x0 + w) + '" y2="' + (y0 + j * cell) + '" stroke="#9db6d3" stroke-width="1"/>';
+  g += '<text x="' + (x0 + w / 2) + '" y="' + (y0 + h + 24) + '" text-anchor="middle" font-size="18" fill="#2f2a25">' + a + ' см</text>';
+  g += '<text x="' + (x0 - 8) + '" y="' + (y0 + h / 2 + 6) + '" text-anchor="end" font-size="18" fill="#2f2a25">' + b + ' см</text>';
+  return '<svg class="pic" viewBox="0 0 300 ' + (y0 + h + 34) + '">' + g + '</svg>';
+}
+
+// ---------- Математика: задачи ----------
+// число + слово в нужной форме: w(5, "марка", "марки", "марок") → «5 марок»
+function w(n, one, few, many) {
+  const a = n % 10, b = n % 100;
+  return n + " " + (a === 1 && b !== 11 ? one : a >= 2 && a <= 4 && (b < 12 || b > 14) ? few : many);
+}
+function raz(k) { return w(k, "раз", "раза", "раз"); }
+const ZADACHI = [
+  function () { const a = rnd(5, 8), b = rnd(5, 9); return { t: "В " + a + " коробках лежит по " + w(b, "карандаш", "карандаша", "карандашей") + ". Сколько всего карандашей?", r: a * b, h: "В каждой коробке поровну — умножаем: " + b + " · " + a + ".", s: b + " · " + a + " = " + a * b + " (к.)" }; },
+  function () { const b = rnd(5, 8), r = rnd(3, 9), a = b * r; return { t: "Разложили " + w(a, "конфету", "конфеты", "конфет") + " поровну в " + b + " пакетов. Сколько конфет в каждом пакете?", r: r, h: "Поровну — делим: " + a + " : " + b + ".", s: a + " : " + b + " = " + r + " (к.)" }; },
+  function () { const a = rnd(3, 9), k = rnd(2, 5); return { t: "У Маши " + w(a, "марка", "марки", "марок") + ", а у Пети в " + raz(k) + " больше. Сколько марок у Пети?", r: a * k, h: "«В " + raz(k) + " больше» — умножаем: " + a + " · " + k + ".", s: a + " · " + k + " = " + a * k + " (м.)" }; },
+  function () { const r = rnd(3, 9), k = rnd(2, 4), a = r * k; return { t: "У Пети " + w(a, "марка", "марки", "марок") + ", а у Маши в " + raz(k) + " меньше. Сколько марок у Маши?", r: r, h: "«В " + raz(k) + " меньше» — делим: " + a + " : " + k + ".", s: a + " : " + k + " = " + r + " (м.)" }; },
+  function () { const c = rnd(3, 9), n = rnd(5, 8); return { t: "Тетрадь стоит " + c + " руб. Сколько рублей стоят " + n + " таких тетрадей?", r: c * n, h: "Стоимость = цена · количество: " + c + " · " + n + ".", s: c + " · " + n + " = " + c * n + " (руб.)" }; },
+  function () { const c = rnd(3, 9), n = rnd(2, 4), s = c * n; return { t: "За " + n + " одинаковые ручки заплатили " + s + " руб. Сколько стоит одна ручка?", r: c, h: "Цена = стоимость : количество: " + s + " : " + n + ".", s: s + " : " + n + " = " + c + " (руб.)" }; },
+  function () { const a = rnd(5, 12), b = rnd(2, 6); return { t: "На одной полке " + w(a, "книга", "книги", "книг") + ", а на другой на " + b + " больше. Сколько книг на двух полках?", r: a + a + b, h: "1) На второй полке: " + a + " + " + b + " = " + (a + b) + ". 2) Всего: " + a + " + " + (a + b) + ".", s: a + " + " + b + " = " + (a + b) + ", " + a + " + " + (a + b) + " = " + (2 * a + b) + " (кн.)" }; },
+  function () { const a = rnd(9, 15), b = rnd(2, 5); return { t: "В классе " + w(a, "мальчик", "мальчика", "мальчиков") + ", а девочек на " + b + " меньше. Сколько всего детей в классе?", r: a + a - b, h: "1) Девочек: " + a + " − " + b + " = " + (a - b) + ". 2) Всего: " + a + " + " + (a - b) + ".", s: a + " − " + b + " = " + (a - b) + ", " + a + " + " + (a - b) + " = " + (2 * a - b) + " (д.)" }; },
+  function () { const n = rnd(2, 4), c = rnd(4, 9), p = rnd(5, 9); return { t: "Купили " + n + " тетради по " + c + " руб. и ручку за " + p + " руб. Сколько рублей заплатили?", r: n * c + p, h: "1) Тетради: " + c + " · " + n + " = " + n * c + ". 2) Вместе с ручкой: " + n * c + " + " + p + ".", s: c + " · " + n + " + " + p + " = " + (n * c + p) + " (руб.)" }; },
+];
+
+// ---------- Порядок действий ----------
+function exprQ() {
+  for (;;) {
+    const k = rnd(0, 5);
+    let text, steps, res;
+    if (k === 0) { const a = rnd(10, 40), b = rnd(2, 9), c = rnd(2, 9); res = a + b * c; text = a + " + " + b + " · " + c; steps = "Сначала умножение: " + b + " · " + c + " = " + b * c + ", потом " + a + " + " + b * c + "."; }
+    else if (k === 1) { const b = rnd(2, 9), c = rnd(2, 9), a = rnd(b * c, 90); res = a - b * c; text = a + " − " + b + " · " + c; steps = "Сначала умножение: " + b + " · " + c + " = " + b * c + ", потом " + a + " − " + b * c + "."; }
+    else if (k === 2) { const c = rnd(2, 9), q = rnd(2, 9), s = c * q, a = rnd(1, s - 1), b = s - a; res = q; text = "(" + a + " + " + b + ") : " + c; steps = "Сначала скобки: " + a + " + " + b + " = " + s + ", потом " + s + " : " + c + "."; }
+    else if (k === 3) { const c = rnd(2, 9), q = rnd(2, 9), a = rnd(c * q, 60); res = a - q; text = a + " − " + c * q + " : " + c; steps = "Сначала деление: " + c * q + " : " + c + " = " + q + ", потом " + a + " − " + q + "."; }
+    else if (k === 4) { const c = rnd(2, 6), d = rnd(2, 9), b = rnd(1, 20), a = b + d; res = d * c; text = "(" + a + " − " + b + ") · " + c; steps = "Сначала скобки: " + a + " − " + b + " = " + d + ", потом " + d + " · " + c + "."; }
+    else { const b = rnd(2, 9), q = rnd(2, 9), c = rnd(2, 5); res = q * c; text = b * q + " : " + b + " · " + c; steps = "По порядку слева направо: " + b * q + " : " + b + " = " + q + ", потом " + q + " · " + c + "."; }
+    if (res >= 0 && res <= 100) return { text: text, res: res, steps: steps };
+  }
+}
+
+// ---------- Таблица умножения ----------
+function tabGame(N) {
+  return { title: "Умножение и деление на " + N, subj: "m", sub: "Таблица с числом " + N, make: function () {
+    return shuffle([1,2,3,4,5,6,7,8,9,10]).slice(0, 10).map(function (k, i) {
+      const kind = i % 3, p = N * k;
+      if (kind === 0) return { task: "Реши пример.", show: N + " · " + k + " = ?", options: numOptions(p, N), right: String(p),
+        hint: k > 1 ? N + " · " + (k - 1) + " = " + N * (k - 1) + ", добавь ещё " + N + "." : "Умножить на 1 — получится то же число.", okText: "Верно! " + N + " · " + k + " = " + p + "." };
+      if (kind === 1) return { task: "Реши пример.", show: p + " : " + N + " = ?", options: numOptions(k, 1), right: String(k),
+        hint: "Какое число умножить на " + N + ", чтобы получилось " + p + "?", okText: "Верно! " + p + " : " + N + " = " + k + ", потому что " + N + " · " + k + " = " + p + "." };
+      return { task: "Реши пример.", show: k + " · " + N + " = ?", options: numOptions(p, N), right: String(p),
+        hint: "От перестановки множителей ответ не меняется: " + k + " · " + N + " = " + N + " · " + k + ".", okText: "Верно! " + k + " · " + N + " = " + p + "." };
+    }); } };
+}
+
+// ---------- Генераторы вопросов: {task, show, options, right, hint, okText} ----------
+const GAMES = {
+  udar: { title: "Где ударение?", subj: "r", sub: "Найди ударный слог", make: function () {
+    return pick(UDAR, 10).map(function (w) {
+      const sl = w[0].split("-"), r = sl[w[1]];
+      return { task: "Какой слог ударный? Позови слово, как будто зовёшь друга.", show: w[0], options: sl, right: r, words: true,
+        hint: "Скажи слово громко и протяжно. Какой слог тянется сильнее?", okText: "Верно! Ударный слог — «" + r + "»." };
+    }); } },
+  mz: { title: "Нужен ли мягкий знак?", subj: "r", sub: "чк, чн, щн — без ь", make: function () {
+    return pick(MZ, 10).map(function (w) {
+      return { task: "Вставь ь, если он нужен. Если не нужен — нажми «—».", show: gap(w[0]), options: ["ь", "—"], right: w[1],
+        hint: "В сочетаниях чк, чн, щн, нч мягкий знак не пишется. Мягкий согласный на конце слова или перед другим согласным — пишем ь.", okText: "Верно! Пишем: " + w[2] + "." };
+    }); } },
+  parn: { title: "Парные согласные на конце", subj: "r", sub: "Проверь словом", make: function () {
+    return pick(PARN, 10).map(function (w) {
+      return { task: "Какую букву написать в конце слова?", show: gap(w[0]), options: shuffle([w[1], w[2]]), right: w[1],
+        hint: "Измени слово так, чтобы после согласной стоял гласный: один — много.", okText: "Верно! " + w[0].replace("_", w[1]) + " — проверка: " + w[3] + "." };
+    }); } },
+  razd: { title: "Разделительный ь", subj: "r", sub: "Нужен ли ь перед е, ё, ю, я, и", make: function () {
+    return pick(RAZD, 10).map(function (w) {
+      return { task: "Вставь ь, если он нужен. Если не нужен — нажми «—».", show: gap(w[0]), options: ["ь", "—"], right: w[1],
+        hint: "Разделительный ь пишем, когда согласный и гласный произносятся раздельно: сем-ья, вороб-ьи. Если слитно — ь не нужен.", okText: "Верно! Пишем: " + w[2] + "." };
+    }); } },
+  koren: { title: "Найди лишнее слово", subj: "r", sub: "Однокоренные слова", make: function () {
+    return pick(KOREN, 10).map(function (g) {
+      return { task: "Три слова — родственные, одно — лишнее. Найди лишнее.", show: "", options: shuffle(g[0].concat([g[1]])), right: g[1], words: true,
+        hint: "Однокоренные слова похожи и по написанию, и по смыслу. Какое слово похоже только буквами?", okText: "Верно! " + g[2][0].toUpperCase() + g[2].slice(1) + "." };
+    }); } },
+  slozh: { title: "Сложные слова: о или е?", subj: "r", sub: "Соединительная гласная", make: function () {
+    return pick(SLOZH, 10).map(function (w) {
+      return { task: "Какая гласная соединяет два корня?", show: gap(w[0]), options: ["о", "е"], right: w[1],
+        hint: "После твёрдого согласного пишем о (пар-о-ход), после мягкого и после ж, ш, ч, щ, ц — е (пеш-е-ход).", okText: "Верно! " + w[2] + "." };
+    }); } },
+  okonch: { title: "Найди окончание", subj: "r", sub: "Измени слово — и увидишь", make: function () {
+    return pick(OKONCH, 10).map(function (w) {
+      const nice = function (x) { return x === "нулевое" ? "нулевое" : "-" + x; };
+      return { task: "Какое окончание в слове?", show: w[0], options: shuffle([w[1], w[2], w[3]]).map(nice), right: nice(w[1]), words: true,
+        hint: "Окончание — часть слова, которая меняется: " + w[4] + ".", okText: "Верно! " + (w[1] === "нулевое" ? "У слова «" + w[0] + "» окончание нулевое." : "Окончание -" + w[1] + ": " + w[4] + ".") };
+    }); } },
+  prist: { title: "Найди приставку", subj: "r", sub: "Часть слова перед корнем", make: function () {
+    return pick(PRIST, 10).map(function (w) {
+      return { task: "Какая приставка в слове?", show: w[0], options: shuffle([w[1], w[3], w[4]]).map(function (x) { return x + "-"; }), right: w[1] + "-", words: true,
+        hint: "Найди слово без приставки: " + w[0] + " — " + w[2] + ". Что стоит перед ним?", okText: "Верно! " + w[0] + " = " + w[1] + " + " + w[2] + "." };
+    }); } },
+  tab6: tabGame(6), tab7: tabGame(7), tab8: tabGame(8),
+  zadachi: { title: "Реши задачу", subj: "m", sub: "Умножение, деление, цена и стоимость", make: function () {
+    const list = shuffle(ZADACHI).concat(shuffle(ZADACHI)).slice(0, 10);
+    return list.map(function (f) {
+      const z = f();
+      return { task: "Прочитай задачу и выбери ответ.", show: z.t, text: true, options: numOptions(z.r, 2), right: String(z.r),
+        hint: z.h, okText: "Верно! " + z.s + "." };
+    }); } },
+  poryadok: { title: "Порядок действий", subj: "m", sub: "Скобки, умножение, деление", make: function () {
+    const out = [];
+    for (let i = 0; i < 10; i++) { const e = exprQ();
+      out.push({ task: "Реши пример. Помни порядок действий.", show: e.text + " = ?", options: numOptions(e.res, 2), right: String(e.res),
+        hint: "Сначала скобки, потом умножение и деление, потом сложение и вычитание. " + e.steps, okText: "Верно! " + e.text + " = " + e.res + "." }); }
+    return out; } },
+  kvadraty: { title: "Сосчитай площадь", subj: "m", sub: "Каждый квадратик — 1 см²", make: function () {
+    const out = [];
+    for (let i = 0; i < 10; i++) { const n = rnd(4, 12), cells = randomFigure(n);
+      out.push({ task: "Каждая клеточка — 1 см². Какая площадь фигуры?", show: figureSvg(cells), raw: true, options: numOptions(cells.length, 1, " см²"), right: cells.length + " см²",
+        hint: "Считай закрашенные клеточки по рядам, сверху вниз.", okText: "Верно! В фигуре " + cells.length + " клеточек — площадь " + cells.length + " см²." }); }
+    return out; } },
+  ploshad: { title: "Площадь прямоугольника", subj: "m", sub: "Длина · ширина", make: function () {
+    const out = [];
+    for (let i = 0; i < 10; i++) { const a = rnd(3, 9), b = rnd(2, 6), per = i % 4 === 3;
+      if (per) out.push({ task: "Найди периметр прямоугольника.", show: rectSvg(a, b), raw: true, options: numOptions((a + b) * 2, 2, " см"), right: (a + b) * 2 + " см",
+        hint: "Периметр — сумма длин всех сторон: (" + a + " + " + b + ") · 2.", okText: "Верно! (" + a + " + " + b + ") · 2 = " + (a + b) * 2 + " см." });
+      else out.push({ task: "Найди площадь прямоугольника.", show: rectSvg(a, b), raw: true, options: numOptions(a * b, b, " см²"), right: a * b + " см²",
+        hint: "Площадь = длина · ширина: " + a + " · " + b + ".", okText: "Верно! " + a + " · " + b + " = " + a * b + " см²." }); }
+    return out; } },
+};
+
+// ---------- Экран ----------
+const app = document.getElementById("app");
+function menu() {
+  document.title = "Игры 8.2";
+  let html = '<header><h1>Игры к урокам · программа 8.2</h1></header><div class="menu"><h2>Русский язык</h2>';
+  Object.keys(GAMES).forEach(function (k) { if (GAMES[k].subj === "r") html += '<a href="#' + k + '">' + GAMES[k].title + '<small>' + GAMES[k].sub + '</small></a>'; });
+  html += '<h2>Математика</h2>';
+  Object.keys(GAMES).forEach(function (k) { if (GAMES[k].subj === "m") html += '<a class="m" href="#' + k + '">' + GAMES[k].title + '<small>' + GAMES[k].sub + '</small></a>'; });
+  html += '</div>';
+  app.innerHTML = html;
+}
+function play(key) {
+  const g = GAMES[key];
+  document.title = g.title;
+  const qs = g.make();
+  let i = 0, firstTry = 0, tried = false;
+  function render() {
+    const q = qs[i];
+    let dots = ""; for (let k = 0; k < qs.length; k++) dots += '<i class="' + (k < i ? "done" : "") + '"></i>';
+    app.innerHTML = '<header><a class="back" href="#">← Все игры</a><h1>' + g.title + '</h1></header>' +
+      '<div class="card"><div class="progress">' + dots + '</div><div class="task">' + q.task + '</div>' +
+      (q.show ? '<div class="big' + (q.text ? ' text' : '') + '">' + q.show + '</div>' : '') +
+      '<div class="btns' + (q.words ? ' words' : '') + '"></div><div class="msg" aria-live="polite"></div></div>';
+    const box = app.querySelector(".btns"), msg = app.querySelector(".msg");
+    q.options.forEach(function (o) {
+      const b = document.createElement("button");
+      b.textContent = o;
+      b.onclick = function () {
+        if (o === q.right) {
+          if (!tried) firstTry++;
+          msg.className = "msg ok"; msg.textContent = q.okText;
+          box.querySelectorAll("button").forEach(function (x) { x.disabled = true; });
+          const nx = document.createElement("button"); nx.className = "next";
+          nx.textContent = i + 1 < qs.length ? "Дальше →" : "Готово";
+          nx.onclick = function () { i++; tried = false; if (i < qs.length) render(); else finish(); };
+          msg.appendChild(document.createElement("br")); msg.appendChild(nx); nx.focus();
+        } else {
+          tried = true; b.disabled = true;
+          msg.className = "msg no"; msg.textContent = "Подумай ещё. " + q.hint;
+        }
+      };
+      box.appendChild(b);
+    });
+  }
+  function finish() {
+    app.innerHTML = '<header><a class="back" href="#">← Все игры</a><h1>' + g.title + '</h1></header>' +
+      '<div class="card"><div class="final">Молодец! Игра пройдена.</div><p style="font-size:20px">С первого раза: ' + firstTry + ' из ' + qs.length + '</p>' +
+      '<button class="next" id="again">Сыграть ещё раз</button></div>';
+    document.getElementById("again").onclick = function () { play(key); };
+  }
+  render();
+}
+function route() { const k = location.hash.replace("#", ""); if (GAMES[k]) play(k); else menu(); window.scrollTo(0, 0); }
+window.addEventListener("hashchange", route);
+route();
+</script>
+</body>
+</html>

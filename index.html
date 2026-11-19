@@ -212,6 +212,30 @@ const TIMETABLE = {
   4: ["Физкультура", "Русский язык", "Технология", "Математика", "Окружающий мир"],
   5: ["Коммуникация", "Физкультура", "Чтение", "Математика", ""],
 };
+// ---------- Игры и листы повторения для программы 8.2 ----------
+// Показываются в окне урока в блоке «Материалы».
+// Игры лежат в igry-8-2.html рядом с index.html; ключ — то, что после #.
+const GAMES82 = {
+  "23.11|Русский язык": ["udar"], "24.11|Русский язык": ["mz"], "25.11|Русский язык": ["parn", "razd"],
+  "26.11|Русский язык": ["parn"], "1.12|Русский язык": ["koren"], "2.12|Русский язык": ["koren"],
+  "3.12|Русский язык": ["slozh"], "7.12|Русский язык": ["okonch"], "8.12|Русский язык": ["okonch"],
+  "9.12|Русский язык": ["prist"], "10.12|Русский язык": ["prist"],
+  "20.11|Математика": ["tab6"], "23.11|Математика": ["zadachi"], "24.11|Математика": ["zadachi"],
+  "26.11|Математика": ["zadachi", "poryadok"], "27.11|Математика": ["tab7"], "30.11|Математика": ["poryadok"],
+  "3.12|Математика": ["kvadraty"], "4.12|Математика": ["kvadraty"], "7.12|Математика": ["ploshad"],
+  "8.12|Математика": ["tab8"], "10.12|Математика": ["poryadok", "ploshad"], "11.12|Математика": ["zadachi"],
+};
+const GAME_TITLES = {
+  udar: "Где ударение?", mz: "Нужен ли мягкий знак?", parn: "Парные согласные на конце", razd: "Разделительный ь",
+  koren: "Найди лишнее слово", slozh: "Сложные слова: о или е?", okonch: "Найди окончание", prist: "Найди приставку",
+  tab6: "Умножение и деление на 6", tab7: "Умножение и деление на 7", tab8: "Умножение и деление на 8",
+  zadachi: "Реши задачу", poryadok: "Порядок действий", kvadraty: "Сосчитай площадь", ploshad: "Площадь прямоугольника",
+};
+// Листы повторения (если в конце урока осталось время): ссылки на Google Диск.
+const REPEAT82 = {
+  "Русский язык": "https://drive.google.com/file/d/1XHBC-EbgtW97Q6tzR8o-3FWUtJ-Fiyxe/view",
+  "Математика": "https://drive.google.com/file/d/1z8b0phEMrB2_sbohi-0p_ja9ajUWTn-Z/view",
+};
 // ===================== КОНЕЦ СПИСКА УРОКОВ ============================
 </script>
 
@@ -393,6 +417,12 @@ const TIMETABLE = {
   }
   .d-note .btn { width: 100%; margin-top: 8px; }
   .d-msg { margin: 10px 0 0; font-size: 14px; color: var(--muted); min-height: 1.4em; }
+  .d-carry { margin-top: 14px; padding: 12px 14px; border-radius: 10px; background: #fbeee0; border-left: 4px solid #c27a2c; }
+  .d-carry b { display: block; font-size: 13px; color: #8a4f12; margin-bottom: 2px; }
+  .d-note label { display: block; margin: 10px 0 4px; font-size: 14px; color: var(--muted); }
+  .d-note textarea.short { min-height: 70px; }
+  .row .status .is-carry { background: #fbeee0; color: #8a4f12; }
+  .offline-note { margin: 6px 0 0; font-size: 13px; color: var(--muted); }
 </style>
 </head>
 
@@ -416,6 +446,7 @@ const TIMETABLE = {
       <span id="syncLine" role="status"></span>
       <button type="button" id="whoBtn"></button>
     </p>
+    <p class="offline-note" id="offlineNote" hidden>Сайт сохранён на этом устройстве: откроется и без интернета.</p>
   </header>
 
   <main>
@@ -450,6 +481,11 @@ const TIMETABLE = {
     </div>
     <h2 class="d-topic" id="dTopic"></h2>
 
+    <div class="d-carry" id="dCarry" hidden>
+      <b id="dCarryTitle"></b>
+      <span class="d-text" id="dCarryText"></span>
+    </div>
+
     <h3>Краткий конспект</h3>
     <p class="d-text" id="dSummary"></p>
 
@@ -462,6 +498,8 @@ const TIMETABLE = {
     <div class="d-saved-note" id="dSavedNote" hidden>
       <h3>Заметка об уроке</h3>
       <p class="d-text" id="dSavedNoteText"></p>
+      <h3 id="dSavedLeftTitle">Не успели (перейдёт на следующий урок)</h3>
+      <p class="d-text" id="dSavedLeft"></p>
     </div>
     <p class="d-who" id="dWho" hidden></p>
 
@@ -470,7 +508,10 @@ const TIMETABLE = {
       <button type="button" class="btn" id="dNoteToggle"></button>
     </div>
     <div class="d-note" id="dNoteBox" hidden>
-      <textarea id="dNoteText" aria-label="Заметка об уроке" placeholder="Как прошёл урок, что не успели"></textarea>
+      <label for="dNoteText">Как прошёл урок</label>
+      <textarea id="dNoteText" placeholder="Что получилось, на что обратить внимание"></textarea>
+      <label for="dLeftText">Что не успели — это увидят на следующем уроке по этому предмету</label>
+      <textarea id="dLeftText" class="short" placeholder="Например: упр. 3 не дописали"></textarea>
       <button type="button" class="btn primary" id="dNoteSave">Сохранить заметку</button>
     </div>
     <p class="d-msg" id="dMsg" role="status"></p>
@@ -521,6 +562,46 @@ const TIMETABLE = {
     catch (e) { return false; }
   }
   function markOf(l) { return marks[lessonId(l)] || {}; }
+
+  // «Что не успели» хранится в той же заметке последней частью:
+  // «…текст заметки…\n\nНе успели: …». Так таблице не нужен новый столбец.
+  const LEFT_RE = /(?:^|\n+)Не успели:\s*([\s\S]*)$/;
+  function splitNote(note) {
+    note = String(note || "");
+    const m = LEFT_RE.exec(note);
+    if (!m) return { text: note.trim(), left: "" };
+    return { text: note.slice(0, m.index).trim(), left: m[1].trim() };
+  }
+  function joinNote(text, left) {
+    text = text.trim(); left = left.trim();
+    return left ? (text ? text + "\n\n" : "") + "Не успели: " + left : text;
+  }
+  // Предыдущий урок по тому же предмету (в этой же программе)
+  function prevLesson(l) {
+    const d = parseDate(l.date);
+    let best = null;
+    LIST.forEach(function (x) {
+      if (x.subject !== l.subject) return;
+      const xd = parseDate(x.date);
+      if (xd < d && (!best || xd > parseDate(best.date))) best = x;
+    });
+    return best;
+  }
+  function carryOf(l) {
+    const p = prevLesson(l);
+    const left = p ? splitNote(markOf(p).note).left : "";
+    return left ? { from: p, left: left } : null;
+  }
+  function statusChips(l) {
+    const m = markOf(l), n = splitNote(m.note), c = carryOf(l);
+    if (!m.done && !n.text && !n.left && !c) return null;
+    const st = el("div", "status");
+    if (m.done) st.appendChild(el("span", "is-done", "✓ Проведён"));
+    if (n.text) st.appendChild(el("span", "", "Есть заметка"));
+    if (n.left) st.appendChild(el("span", "is-carry", "Не успели — перенесено"));
+    if (c) st.appendChild(el("span", "is-carry", "↪ Доделать с прошлого урока"));
+    return st;
+  }
 
   // ---------- Уроки и недели ----------
   const byId = {};
@@ -638,13 +719,8 @@ const TIMETABLE = {
       if (lesson) {
         row.type = "button";
         body.appendChild(el("div", "topic", lesson.topic || "Тема пока не заполнена"));
-        const m = markOf(lesson);
-        if (m.done || m.note) {
-          const st = el("div", "status");
-          if (m.done) st.appendChild(el("span", "is-done", "✓ Проведён"));
-          if (m.note) st.appendChild(el("span", "", "Есть заметка"));
-          body.appendChild(st);
-        }
+        const st = statusChips(lesson);
+        if (st) body.appendChild(st);
         row.onclick = function () { openLesson(lesson); };
       }
       row.appendChild(when);
@@ -693,13 +769,8 @@ const TIMETABLE = {
       const body = el("div");
       body.appendChild(el("div", "subject", l.subject));
       body.appendChild(el("div", "topic", l.topic || "Тема пока не заполнена"));
-      const m = markOf(l);
-      if (m.done || m.note) {
-        const st = el("div", "status");
-        if (m.done) st.appendChild(el("span", "is-done", "✓ Проведён"));
-        if (m.note) st.appendChild(el("span", "", "Есть заметка"));
-        body.appendChild(st);
-      }
+      const st = statusChips(l);
+      if (st) body.appendChild(st);
       row.onclick = function () { openLesson(l); };
       row.appendChild(when);
       row.appendChild(body);
@@ -760,7 +831,7 @@ const TIMETABLE = {
   // По нему видно, изменилось ли что-то после ответа таблицы.
   let shownLesson = "", shownMark = "";
   function lessonPrint(l) { return JSON.stringify(FIELDS.map(function (f) { return l[f] || ""; })); }
-  function markPrint(l) { const m = markOf(l); return JSON.stringify([!!m.done, m.note || "", m.who || "", m.when || ""]); }
+  function markPrint(l) { const m = markOf(l), c = carryOf(l); return JSON.stringify([!!m.done, m.note || "", m.who || "", m.when || "", c ? c.left : ""]); }
   // Открытое окно обновляется само, когда из таблицы пришло новое.
   // Если ничего не изменилось, окно не трогаем: картинки не мигают.
   function refreshDialog() {
@@ -782,6 +853,13 @@ const TIMETABLE = {
     $("dWhen").textContent = WD_FULL[d.getDay()] + ", " + d.getDate() + " " + MONTHS[d.getMonth()] +
       (slot >= 0 ? " · " + (slot + 1) + " урок, " + TIMES[slot] : "");
     $("dTopic").textContent = l.topic || "Тема пока не заполнена";
+    const carry = carryOf(l);
+    $("dCarry").hidden = !carry;
+    if (carry) {
+      const pd = parseDate(carry.from.date);
+      $("dCarryTitle").textContent = "↪ На прошлом уроке (" + pd.getDate() + " " + MONTHS[pd.getMonth()] + ") не успели:";
+      $("dCarryText").textContent = carry.left;
+    }
     setText($("dSummary"), l.summary);
     setText($("dHomework"), l.homework);
 
@@ -804,15 +882,36 @@ const TIMETABLE = {
       }
       mats.appendChild(li);
     });
+    // Программа 8.2: игры к уроку и лист повторения «если осталось время»
+    function addLink(title, href, tail) {
+      const li = el("li");
+      const a = el("a", "", title);
+      a.href = href; a.target = "_blank"; a.rel = "noopener";
+      li.appendChild(a);
+      li.appendChild(el("span", "none", tail));
+      mats.appendChild(li);
+    }
+    if (!IS83) {
+      (GAMES82[dayId(l)] || []).forEach(function (g) {
+        addLink("▶ Игра: " + (GAME_TITLES[g] || g), "igry-8-2.html#" + g, "на 5 минут");
+      });
+      const rep = REPEAT82[l.subject];
+      if (/^https?:\/\//i.test(rep || "")) addLink("Лист повторения", rep, "если осталось время");
+    }
     mats.hidden = $("dMaterialsTitle").hidden = !mats.children.length;
 
-    $("dSavedNote").hidden = !m.note;
-    $("dSavedNoteText").textContent = m.note || "";
+    const n = splitNote(m.note);
+    $("dSavedNote").hidden = !n.text && !n.left;
+    $("dSavedNoteText").textContent = n.text;
+    $("dSavedNoteText").hidden = !n.text;
+    $("dSavedNoteText").previousElementSibling.hidden = !n.text;
+    $("dSavedLeft").textContent = n.left;
+    $("dSavedLeft").hidden = $("dSavedLeftTitle").hidden = !n.left;
     $("dWho").hidden = !m.who;
     $("dWho").textContent = m.who ? "Последнее изменение: " + m.who + (m.when ? ", " + m.when : "") : "";
     $("dDone").textContent = m.done ? "✓ Проведён (снять отметку)" : "Урок проведён";
     $("dDone").setAttribute("aria-pressed", m.done ? "true" : "false");
-    $("dNoteToggle").textContent = m.note ? "Изменить заметку" : "Оставить заметку";
+    $("dNoteToggle").textContent = m.note ? "Изменить заметку" : "Заметка / что не успели";
   }
   function updateMark(change) {
     const id = lessonId(current);
@@ -852,13 +951,21 @@ const TIMETABLE = {
   $("dNoteToggle").onclick = function () {
     const box = $("dNoteBox");
     box.hidden = !box.hidden;
-    if (!box.hidden) { $("dNoteText").value = markOf(current).note || ""; $("dNoteText").focus(); }
+    if (!box.hidden) {
+      const n = splitNote(markOf(current).note);
+      $("dNoteText").value = n.text;
+      $("dLeftText").value = n.left;
+      $("dNoteText").focus();
+    }
   };
   $("dNoteSave").onclick = function () {
-    const text = $("dNoteText").value.trim();
+    const left = $("dLeftText").value.trim();
+    const text = joinNote($("dNoteText").value, left);
     const ok = updateMark({ note: text });
     $("dNoteBox").hidden = true;
-    $("dMsg").textContent = !ok ? SAVE_FAIL : text ? (SHARED ? "Заметка сохранена." : "Заметка сохранена на этом устройстве.") : "Заметка удалена.";
+    $("dMsg").textContent = !ok ? SAVE_FAIL : !text ? "Заметка удалена." :
+      (SHARED ? "Заметка сохранена." : "Заметка сохранена на этом устройстве.") +
+      (left ? " «Не успели» появится на следующем уроке по этому предмету." : "");
   };
 
   // ---------- Шаг Б: общая Google-таблица ----------
@@ -918,9 +1025,12 @@ const TIMETABLE = {
       sent.forEach(function (c) { if (queue[c.id] && queue[c.id].t === c.t) delete queue[c.id]; });
       saveQueue();
       const rows = IS83 ? res.lessons83 : res.lessons;
-      if (applyLessons(rows)) {
-        try { localStorage.setItem(LESSONS_KEY, JSON.stringify(rows)); } catch (e) {}
-      }
+      applyLessons(rows);
+      // Запомнить уроки обеих программ: без интернета откроется любая.
+      try {
+        if (Array.isArray(res.lessons)) localStorage.setItem("sayt-uroki-uroki", JSON.stringify(res.lessons));
+        if (Array.isArray(res.lessons83)) localStorage.setItem("sayt-uroki-uroki-8.3", JSON.stringify(res.lessons83));
+      } catch (e) {}
       applyServer(res.marks);
       const now = new Date();
       $("syncLine").textContent = "Отметки общие, обновлено в " + now.getHours() + ":" + String(now.getMinutes()).padStart(2, "0");
@@ -955,6 +1065,15 @@ const TIMETABLE = {
   }
   renderAll();
   sync();
+
+  // ---------- Работа без интернета ----------
+  // Файл sw.js (лежит рядом с index.html) сохраняет сайт, игры и картинки
+  // на телефоне. Без интернета открывается то, что было загружено в прошлый раз.
+  if ("serviceWorker" in navigator && /^https?:$/.test(location.protocol)) {
+    navigator.serviceWorker.register("sw.js").then(function () {
+      return navigator.serviceWorker.ready;
+    }).then(function () { $("offlineNote").hidden = false; }).catch(function () {});
+  }
 </script>
 </body>
 </html>
